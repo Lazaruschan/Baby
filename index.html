@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#000000">
+    <meta
+      name="description"
+      content="寶寶相簿 — 新生兒照片、影片、放大瀏覽與相片下載。"
+    >
+    <title>寶寶相簿</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/app.js" defer></script>
+  </head>
+  <body>
+    <header class="top-bar" aria-label="網站導覽">
+      <a class="brand" href="#top" aria-label="回到寶寶相簿首頁">寶寶相簿</a>
+      <nav class="top-nav" aria-label="頁面區段">
+        <a href="#video">影片</a>
+        <a href="#timeline">相片</a>
+        <a class="nav-pill" href="#timeline">看相片</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow">初見</p>
+          <h1 id="hero-title">寶寶相簿</h1>
+          <p class="hero-lede">
+            72 張相片 · 一段影片
+          </p>
+          <div class="hero-actions">
+            <a class="button primary" href="#timeline">看相片</a>
+            <a class="button secondary" href="#video">看影片</a>
+          </div>
+        </div>
+        <figure class="hero-frame">
+          <img
+            src="assets/FACE_1.png"
+            alt="寶寶相簿 — 精選新生兒相片"
+            fetchpriority="high"
+            decoding="async"
+          >
+        </figure>
+      </section>
+
+      <section class="timeline-section" id="timeline" aria-labelledby="timeline-title">
+        <div class="section-heading">
+          <p class="eyebrow">相片</p>
+          <h2 id="timeline-title">72 張相片</h2>
+        </div>
+        <div class="timeline" id="gallery" aria-live="polite"></div>
+      </section>
+
+      <section class="video-section" id="video" aria-labelledby="video-title">
+        <div class="section-heading">
+          <p class="eyebrow">影片</p>
+          <h2 id="video-title">第一段回憶</h2>
+        </div>
+        <div class="video-shell">
+          <iframe
+            src="https://www.youtube.com/embed/Y2kd9qTyXEU"
+            title="寶寶相簿影片"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen
+          ></iframe>
+        </div>
+      </section>
+    </main>
+
+    <div class="lightbox" id="lightbox" aria-hidden="true" role="dialog" aria-modal="true" aria-label="相片瀏覽器">
+      <div class="lightbox-scrim" data-close-lightbox></div>
+      <div class="lightbox-panel">
+        <header class="lightbox-toolbar">
+          <p class="lightbox-counter" id="lightbox-counter">1 / 72</p>
+          <div class="lightbox-actions">
+            <button class="button secondary compact" type="button" id="lightbox-download">下載</button>
+            <button class="icon-button" type="button" id="lightbox-close" aria-label="關閉相片瀏覽器">×</button>
+          </div>
+        </header>
+        <button class="gallery-arrow previous" type="button" id="previous-photo" aria-label="上一張相片">‹</button>
+        <div class="lightbox-stage" id="lightbox-stage">
+          <img id="lightbox-image" alt="">
+        </div>
+        <button class="gallery-arrow next" type="button" id="next-photo" aria-label="下一張相片">›</button>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>
