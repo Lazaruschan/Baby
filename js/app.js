@@ -16,6 +16,13 @@ const PHOTOS = [
 }));
 
 const gallery = document.querySelector("#gallery");
+const sliderViewport = document.querySelector("#slider-viewport");
+const sliderTrack = document.querySelector("#slider-track");
+const sliderCounter = document.querySelector("#slider-counter");
+const sliderPrevious = document.querySelector("#slider-previous");
+const sliderNext = document.querySelector("#slider-next");
+const sliderDownload = document.querySelector("#slider-download");
+const sliderOpen = document.querySelector("#slider-open");
 const lightbox = document.querySelector("#lightbox");
 const lightboxImage = document.querySelector("#lightbox-image");
 const lightboxStage = document.querySelector("#lightbox-stage");
@@ -27,6 +34,7 @@ const nextPhoto = document.querySelector("#next-photo");
 const toast = document.querySelector("#toast");
 
 let currentIndex = 0;
+let sliderIndex = 0;
 let lastFocusedElement = null;
 let zoom = 1;
 let panX = 0;
@@ -34,6 +42,8 @@ let panY = 0;
 let dragStart = null;
 let pinchStart = null;
 let lastTap = { time: 0, x: 0, y: 0 };
+let sliderDragStartX = 0;
+let sliderDidDrag = false;
 const activePointers = new Map();
 const tapStarts = new Map();
 
@@ -45,57 +55,99 @@ function renderGallery() {
   const fragment = document.createDocumentFragment();
 
   PHOTOS.forEach((photo) => {
-    const card = document.createElement("article");
-    card.className = "photo-card";
-    card.tabIndex = 0;
-    card.setAttribute("role", "button");
-    card.setAttribute("aria-label", `開啟${photo.alt}`);
-    card.dataset.index = String(photo.index);
+    const slide = document.createElement("figure");
+    slide.className = "slider-slide";
+    slide.dataset.index = String(photo.index);
 
     const image = document.createElement("img");
     image.src = encodedPath(photo.src);
     image.alt = photo.alt;
-    image.loading = photo.index === 0 ? "eager" : "lazy";
+    image.loading = photo.index < 3 ? "eager" : "lazy";
     image.decoding = "async";
+    image.draggable = false;
 
-    const meta = document.createElement("div");
-    meta.className = "photo-meta";
-
-    const label = document.createElement("div");
-    label.className = "photo-label";
-    label.innerHTML = `<strong>${photo.label}</strong><span>${photo.group}</span>`;
-
-    const download = document.createElement("button");
-    download.className = "download-button";
-    download.type = "button";
-    download.textContent = "下載";
-    download.addEventListener("click", (event) => {
-      event.stopPropagation();
-      downloadPhoto(photo);
-    });
-
-    meta.append(label, download);
-    card.append(image, meta);
-
-    card.addEventListener("click", () => openLightbox(photo.index));
-    card.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        openLightbox(photo.index);
+    slide.append(image);
+    slide.addEventListener("click", () => {
+      if (sliderDidDrag) {
+        return;
       }
-    });
 
-    fragment.append(card);
+      openLightbox(photo.index);
+    });
+    fragment.append(slide);
   });
 
-  gallery.append(fragment);
+  sliderTrack.append(fragment);
+  sliderIndex = 0;
+  sliderViewport.scrollLeft = 0;
+  updateSliderCounter();
+  window.requestAnimationFrame(() => goToSlide(0, false));
+}
+
+function updateSliderCounter() {
+  sliderCounter.textContent = `${sliderIndex + 1} / ${PHOTOS.length}`;
+  gallery.setAttribute("aria-label", `寶寶相片輪播，目前第 ${sliderIndex + 1} 張，共 ${PHOTOS.length} 張`);
+}
+
+function goToSlide(index, smooth = true) {
+  sliderIndex = (index + PHOTOS.length) % PHOTOS.length;
+  const slide = sliderTrack.children[sliderIndex];
+  if (!slide) {
+    return;
+  }
+
+  const left = slide.offsetLeft - (sliderViewport.clientWidth - slide.clientWidth) / 2;
+  sliderViewport.scrollTo({
+    left,
+    behavior: smooth ? "smooth" : "auto",
+  });
+  updateSliderCounter();
+}
+
+function syncSliderFromScroll() {
+  const viewportCenter = sliderViewport.scrollLeft + sliderViewport.clientWidth / 2;
+  let closestIndex = sliderIndex;
+  let closestDistance = Infinity;
+
+  Array.from(sliderTrack.children).forEach((slide, index) => {
+    const slideCenter = slide.offsetLeft + slide.offsetWidth / 2;
+    const distance = Math.abs(slideCenter - viewportCenter);
+    if (distance < closestDistance) {
+      closestDistance = distance;
+      closestIndex = index;
+    }
+  });
+
+  if (closestIndex !== sliderIndex) {
+    sliderIndex = closestIndex;
+    updateSliderCounter();
+  }
+}
+
+function beginSliderDrag(event) {
+  sliderDragStartX = event.clientX;
+  sliderDidDrag = false;
+}
+
+function moveSliderDrag(event) {
+  if (Math.abs(event.clientX - sliderDragStartX) > 8) {
+    sliderDidDrag = true;
+  }
+}
+
+function finishSliderDrag() {
+  window.setTimeout(() => {
+    sliderDidDrag = false;
+  }, 0);
 }
 
 function openLightbox(index) {
   lastFocusedElement = document.activeElement;
   currentIndex = index;
+  sliderIndex = index;
   resetTransform();
   updateLightboxPhoto();
+  updateSliderCounter();
   lightbox.classList.add("is-open");
   lightbox.setAttribute("aria-hidden", "false");
   document.body.classList.add("lightbox-open");
@@ -113,6 +165,8 @@ function closeLightbox() {
   if (lastFocusedElement && typeof lastFocusedElement.focus === "function") {
     lastFocusedElement.focus();
   }
+
+  goToSlide(currentIndex, false);
 }
 
 function updateLightboxPhoto() {
@@ -358,5 +412,34 @@ lightboxStage.addEventListener("pointerdown", beginPointer);
 lightboxStage.addEventListener("pointermove", movePointer, { passive: false });
 lightboxStage.addEventListener("pointerup", finishPointer);
 lightboxStage.addEventListener("pointercancel", finishPointer);
+
+sliderPrevious.addEventListener("click", () => goToSlide(sliderIndex - 1));
+sliderNext.addEventListener("click", () => goToSlide(sliderIndex + 1));
+sliderDownload.addEventListener("click", () => downloadPhoto(PHOTOS[sliderIndex]));
+sliderOpen.addEventListener("click", () => openLightbox(sliderIndex));
+
+sliderViewport.addEventListener("scroll", () => {
+  window.clearTimeout(syncSliderFromScroll.timeout);
+  syncSliderFromScroll.timeout = window.setTimeout(syncSliderFromScroll, 80);
+}, { passive: true });
+
+sliderViewport.addEventListener("pointerdown", beginSliderDrag);
+sliderViewport.addEventListener("pointermove", moveSliderDrag);
+sliderViewport.addEventListener("pointerup", finishSliderDrag);
+sliderViewport.addEventListener("pointercancel", finishSliderDrag);
+
+gallery.addEventListener("keydown", (event) => {
+  if (lightbox.classList.contains("is-open")) {
+    return;
+  }
+
+  if (event.key === "ArrowLeft") {
+    event.preventDefault();
+    goToSlide(sliderIndex - 1);
+  } else if (event.key === "ArrowRight") {
+    event.preventDefault();
+    goToSlide(sliderIndex + 1);
+  }
+});
 
 renderGallery();

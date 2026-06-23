@@ -50,7 +50,20 @@
           <p class="eyebrow">相片</p>
           <h2 id="timeline-title">72 張相片</h2>
         </div>
-        <div class="timeline" id="gallery" aria-live="polite"></div>
+        <div class="photo-slider" id="gallery" tabindex="0" aria-roledescription="carousel" aria-label="寶寶相片輪播">
+          <div class="slider-controls">
+            <button class="slider-arrow previous" type="button" id="slider-previous" aria-label="上一張相片">‹</button>
+            <p class="slider-counter" id="slider-counter" aria-live="polite">1 / 72</p>
+            <button class="slider-arrow next" type="button" id="slider-next" aria-label="下一張相片">›</button>
+          </div>
+          <div class="slider-viewport" id="slider-viewport">
+            <div class="slider-track" id="slider-track"></div>
+          </div>
+          <div class="slider-actions">
+            <button class="button secondary compact" type="button" id="slider-download">下載</button>
+            <button class="button primary compact" type="button" id="slider-open">放大</button>
+          </div>
+        </div>
       </section>
 
       <section class="video-section" id="video" aria-labelledby="video-title">
